@@ -29,22 +29,6 @@ Implementação de um **resolvedor recursivo DNS** do zero, usando **sockets bá
   sudo apt-get install -y build-essential cmake libssl-dev ca-certificates
   sudo update-ca-certificates
 
-# Estrutura
-src/
-  dns_wire.{hpp,cpp}      # parsing/codificação DNS (wire format)
-  transport.{hpp,cpp}     # UDP e TCP (porta 53) com timeouts
-  transport_tls.{h,cpp}   # DoT (TLS/853) + SNI (modo 1 salto)
-  resolver.{hpp,cpp}      # lógica iterativa + cache + single hop
-  cache.{hpp,cpp}         # cache local (positiva/negativa)
-  cache_client.{h,cpp}    # cliente do cache_daemon
-  cache_daemon_main.cpp   # processo daemon (socket de texto)
-  cachectl.cpp            # utilitário para o daemon
-  main.cpp                # CLI principal
-
-## Uso:
-Uso: tp1dns_cli --ns <ip> --name <qname> --qtype <A|AAAA|NS|MX|TXT|CNAME|SOA>
-                [--iter] [--trace] [--mode {dns,dot}] [--sni <hostname>] [--insecure-dot]
-
 ## Compilação
 
     '''bash
