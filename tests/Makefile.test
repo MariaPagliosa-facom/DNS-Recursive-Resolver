@@ -1,0 +1,43 @@
+.PHONY: all test recursive dot cache quality integration errors clean
+
+all: test
+
+test: recursive dot cache quality integration errors
+
+recursive:
+	@echo "Executando testes de resolução recursiva/iterativa..."
+	@./test_recursive_iterative.sh
+
+dot:
+	@echo "Executando testes de DNS-over-TLS..."
+	@./test_dot.sh
+
+cache:
+	@echo "Executando testes de cache..."
+	@./test_cache.sh
+
+quality:
+	@echo "Executando testes de qualidade..."
+	@./test_quality.sh
+
+integration:
+	@echo "Executando testes de integração..."
+	@./test_integration.sh
+
+full: 
+	@./run_all_tests.sh
+
+clean:
+	@pkill -f cache_daemon 2>/dev/null || true
+	@rm -f *.log
+
+help:
+	@echo "Targets disponíveis:"
+	@echo "  test        - Executa todos os testes"
+	@echo "  recursive   - Testes de resolução recursiva/iterativa"
+	@echo "  dot         - Testes de DNS-over-TLS"
+	@echo "  cache       - Testes de sistema de cache"
+	@echo "  quality     - Testes de qualidade e funcionalidades"
+	@echo "  integration - Testes de integração completa"
+	@echo "  full        - Executa suite completa de testes"
+	@echo "  clean       - Limpa processos e arquivos temporários"
