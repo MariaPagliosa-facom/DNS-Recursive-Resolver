@@ -26,8 +26,8 @@
 #include <openssl/err.h>
 #include <openssl/x509v3.h>
 
-using string;
-using vector;
+using std::string;
+using std::vector;
 
 // Helpers de erro OpenSSL
 static void
