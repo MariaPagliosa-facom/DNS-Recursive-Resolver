@@ -53,9 +53,80 @@ add_executable(cache_daemon
 )
 target_link_libraries(cache_daemon PRIVATE tp1dns)
 
+if(UNIX)
+    find_package(Threads REQUIRED)
+    target_link_libraries(cache_daemon PRIVATE Threads::Threads)
+endif()
+
 # ===== Utilitário de inspeção do cache =====
 add_executable(cachectl
   src/cachectl.cpp
 )
 # Ele usa sockets também (no Windows), então já recebe Ws2_32 via tp1dns (propagado).
 target_link_libraries(cachectl PRIVATE tp1dns)
+
+
+# ===== Testes de Linha de Comando =====
+
+file(COPY 
+    tests/test_recursive_iterative.sh
+    tests/test_dot.sh
+    tests/test_cache.sh
+    tests/test_quality.sh
+    tests/test_integration.sh
+    tests/run_all_tests.sh
+    tests/Makefile.test
+    DESTINATION ${CMAKE_BINARY_DIR}/tests
+)
+
+# Tornar scripts executáveis (Unix)
+if(UNIX)
+    add_custom_target(make_tests_executable ALL
+        COMMAND chmod +x ${CMAKE_BINARY_DIR}/tests/*.sh
+        COMMENT "Tornando scripts de teste executáveis"
+    )
+endif()
+
+# Adicionar alvos de teste
+add_custom_target(run_all_tests
+    COMMAND ./run_all_tests.sh
+    DEPENDS tp1dns_cli cache_daemon cachectl
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+    COMMENT "Executando todos os testes de linha de comando"
+)
+
+# Alvos individuais de teste
+add_custom_target(test_recursive
+    COMMAND ./test_recursive_iterative.sh
+    DEPENDS tp1dns_cli
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+    COMMENT "Executando testes de resolução recursiva/iterativa"
+)
+
+add_custom_target(test_dot
+    COMMAND ./test_dot.sh
+    DEPENDS tp1dns_cli
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+    COMMENT "Executando testes de DNS-over-TLS"
+)
+
+add_custom_target(test_cache
+    COMMAND ./test_cache.sh
+    DEPENDS tp1dns_cli cache_daemon cachectl
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+    COMMENT "Executando testes de cache"
+)
+
+add_custom_target(test_quality
+    COMMAND ./test_quality.sh
+    DEPENDS tp1dns_cli
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+    COMMENT "Executando testes de qualidade"
+)
+
+add_custom_target(test_integration
+    COMMAND ./test_integration.sh
+    DEPENDS tp1dns_cli cache_daemon cachectl
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+    COMMENT "Executando testes de integração"
+)
