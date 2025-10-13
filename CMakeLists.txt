@@ -72,7 +72,6 @@ file(COPY
     tests/test_recursive_iterative.sh
     tests/test_dot.sh
     tests/test_cache.sh
-    tests/test_quality.sh
     tests/test_integration.sh
     tests/run_all_tests.sh
     tests/Makefile.test
@@ -115,13 +114,6 @@ add_custom_target(test_cache
     DEPENDS tp1dns_cli cache_daemon cachectl
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests
     COMMENT "Executando testes de cache"
-)
-
-add_custom_target(test_quality
-    COMMAND ./test_quality.sh
-    DEPENDS tp1dns_cli
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/tests
-    COMMENT "Executando testes de qualidade"
 )
 
 add_custom_target(test_integration

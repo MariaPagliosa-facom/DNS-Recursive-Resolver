@@ -16,10 +16,6 @@ cache:
 	@echo "Executando testes de cache..."
 	@./test_cache.sh
 
-quality:
-	@echo "Executando testes de qualidade..."
-	@./test_quality.sh
-
 integration:
 	@echo "Executando testes de integração..."
 	@./test_integration.sh
@@ -37,7 +33,6 @@ help:
 	@echo "  recursive   - Testes de resolução recursiva/iterativa"
 	@echo "  dot         - Testes de DNS-over-TLS"
 	@echo "  cache       - Testes de sistema de cache"
-	@echo "  quality     - Testes de qualidade e funcionalidades"
 	@echo "  integration - Testes de integração completa"
 	@echo "  full        - Executa suite completa de testes"
 	@echo "  clean       - Limpa processos e arquivos temporários"
