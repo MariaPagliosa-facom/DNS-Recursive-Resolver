@@ -12,11 +12,10 @@ Implementação de um **resolvedor recursivo DNS** do zero, usando **sockets bá
   - **Negativa**: NXDOMAIN/NODATA + TTL (SOA.minimum);
   - **Local por processo** e via **daemon** externo (socket de texto).
 - **DoT (DNS over TLS)** no **modo 1 salto** (recursivos públicos: 1.1.1.1, 8.8.8.8).
+    > DoT é aplicado somente no modo 1 salto (recursivos). No modo iterativo, usamos UDP/TCP, pois autoritativos raramente oferecem DoT.
 - Logs de **trace** com `--trace`.
 
 > Não utilizamos bibliotecas “DNS prontas”. O wire format, sockets e a lógica de resolução foram implementados manualmente.
-
----
 
 ## Requisitos
 
@@ -31,23 +30,78 @@ Implementação de um **resolvedor recursivo DNS** do zero, usando **sockets bá
 
 ## Compilação
 
-    '''bash
     cmake -S . -B build
     cmake --build build -j
 
-## Exemplos:
-    '''bash
-    # 1 salto (DNS “clássico”: UDP/TCP)
-    ./build/tp1dns_cli --ns 1.1.1.1 --name example.com --qtype A
+# Casos de Teste
 
-    # 1 salto com DoT (TLS/853) — SNI obrigatório
-    ./build/tp1dns_cli --ns 1.1.1.1 --name example.com --qtype A --mode dot --sni cloudflare-dns.com
-    ./build/tp1dns_cli --ns 8.8.8.8 --name example.com --qtype AAAA --mode dot --sni dns.google
+Abra a basta criada pelo compilador para poder realizar os testes abaixo (referenciados no relatório).
+```
+cd build/tests/
+```
 
-    # (diagnóstico) ignorar validação de certificado no DoT:
-    ./build/tp1dns_cli --ns 1.1.1.1 --name example.com --qtype A --mode dot --sni cloudflare-dns.com --insecure-dot
+É possível executar todos os testes de uma vez só:
+```
+./run_all_tests.sh
+```
 
-    # Resolução iterativa + cache (começando em root), com trace
-    ./build/tp1dns_cli --ns 198.41.0.4 --name www.ufms.br --qtype A --iter --trace
-    '''
-> DoT é aplicado somente no modo 1 salto (recursivos). No modo iterativo, usamos UDP/TCP, pois autoritativos raramente oferecem DoT.
+Ou escolher qual dos blocos abaixo serão executados:
+
+```
+./test_recursive_iterative.sh
+./test_dot.sh
+./test_cache.sh
+./test_integration.sh
+```
+
+## Validação Funcional Básica <./test_recursive_iterative.sh>
+- [CT01]
+    ```bash
+    ../tp1dns_cli --ns 198.41.0.4 --name www.google.com --qtype A --iter --trace
+    ../tp1dns_cli --ns 198.41.0.4 --name www.github.com --qtype A --iter
+- [CT02]
+    ```bash
+    ../tp1dns_cli --ns 198.41.0.4 --name www.ufms.br --qtype A --iter --trace
+- [CT03]
+    ```bash
+    ../tp1dns_cli --ns 198.41.0.4 --name google.com --qtype NS --iter
+    ../tp1dns_cli --ns 198.41.0.4 --name gmail.com --qtype MX --iter
+    ../tp1dns_cli --ns 198.41.0.4 --name facebook.com --qtype AAAA --iter
+
+## Testes de Protocolo <./test_dot.sh>
+- [CT04]
+    ```bash
+    ../tp1dns_cli --ns 1.1.1.1 --name example.com --qtype A --mode dot --sni cloudflare-dns.com
+    ../tp1dns_cli --ns 8.8.8.8 --name example.com --qtype AAAA --mode dot --sni dns.google
+- [CT05]
+    ```bash
+    ../tp1dns_cli --ns 1.1.1.1 --name example.com --qtype A --mode dot --sni cloudflare-dns.com --insecure-dot
+- [CT06]
+    ```bash
+    ../tp1dns_cli --ns 1.1.1.1 --name example.com --qtype A
+    ../tp1dns_cli --ns 1.1.1.1 --name example.com --qtype A --mode dot --sni cloudflare-dns.com
+
+## Avaliação do Sistema de Cache <./test_cache.sh>
+- [CT07]
+    ```bash
+    ../tp1dns_cli --ns 198.41.0.4 --name example.com --qtype A --iter
+    ../tp1dns_cli --ns 198.41.0.4 --name example.com --qtype A --iter
+- [CT08]
+    ```bash
+    ../tp1dns_cli --ns 198.41.0.4 --name "dominio-inexistente-$(date +%s).com" --qtype A --iter
+    ../tp1dns_cli --ns 198.41.0.4 --name "dominio-inexistente-$(date +%s).com" --qtype A --iter
+- [CT09]
+    ```bash
+    ../cachectl status
+    ../cachectl get example.com A
+
+## Testes de Integração <./test_integration.sh>
+- [CT10]
+    ```bash
+    ../tp1dns_cli --ns 1.1.1.1 --name example.com --qtype A --mode dot --sni cloudflare-dns.com --iter --trace
+    ../cachectl get example.com A
+    ../tp1dns_cli --ns 1.1.1.1 --name example.com --qtype A --mode dot --sni cloudflare-dns.com --iter
+- [CT11]
+    ```bash
+    time ../tp1dns_cli --ns 198.41.0.4 --name example.com --qtype A --iter > /dev/null 2>&1
+    time ../tp1dns_cli --ns 198.41.0.4 --name example.com --qtype A --iter > /dev/null 2>&1
